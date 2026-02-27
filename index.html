@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Signal Mine — CAT Reading Digger</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <div class="logo">⛏️</div>
+      <div>
+        <div class="title">Signal Mine</div>
+        <div class="subtitle">Gold-digger CAT Reading (Main Idea & Evidence)</div>
+      </div>
+    </div>
+
+    <div class="hud">
+      <div class="chip">🪙 Gold: <span id="gold">0</span></div>
+      <div class="chip">⛏️ Shovel: <span id="shovelLevel">1</span></div>
+      <div class="chip">🧨 Dynamite: <span id="dynamite">0</span></div>
+      <div class="chip">🎯 CAT Level: <span id="catLevel">2.0</span></div>
+      <div class="chip">✅ Acc: <span id="acc">0%</span></div>
+    </div>
+
+    <div class="help">
+      <button id="btnHelp" class="btn ghost">Controls</button>
+      <button id="btnShop" class="btn">Shop (E)</button>
+      <button id="btnReset" class="btn danger">Reset</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="left">
+      <div class="panel">
+        <div class="panelTitle">Mine</div>
+        <canvas id="game" width="720" height="540"></canvas>
+
+        <div class="tips">
+          <div class="tip"><b>Dig:</b> Click an adjacent tile</div>
+          <div class="tip"><b>Move:</b> Arrows / WASD</div>
+          <div class="tip"><b>Dynamite:</b> Press <b>D</b> to clear 3×3</div>
+          <div class="tip"><b>Goal:</b> Earn gold → buy tools → dig deeper → answer harder questions</div>
+        </div>
+      </div>
+    </section>
+
+    <section class="right">
+      <div class="panel">
+        <div class="panelTitle">Run Summary</div>
+        <div class="statGrid">
+          <div class="stat">
+            <div class="statLabel">Questions Answered</div>
+            <div class="statValue" id="qCount">0</div>
+          </div>
+          <div class="stat">
+            <div class="statLabel">Correct</div>
+            <div class="statValue" id="qCorrect">0</div>
+          </div>
+          <div class="stat">
+            <div class="statLabel">Main Idea Mastery</div>
+            <div class="statValue" id="miScore">0%</div>
+          </div>
+          <div class="stat">
+            <div class="statLabel">Evidence Mastery</div>
+            <div class="statValue" id="evScore">0%</div>
+          </div>
+        </div>
+
+        <div class="panelTitle" style="margin-top:18px;">Next Target</div>
+        <div class="targetBox" id="targetBox">
+          Dig around to find a question node 📘.
+        </div>
+
+        <div class="panelTitle" style="margin-top:18px;">Data Tracking</div>
+        <ul class="bullets">
+          <li>Accuracy + streak tracking</li>
+          <li>CAT difficulty estimate (1.0–5.0)</li>
+          <li>Weak-skill targeting (Main Idea vs Evidence)</li>
+          <li>Local save (auto)</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <!-- Question Modal -->
+  <div id="modal" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modalCard">
+      <div class="modalHeader">
+        <div class="modalTitle" id="mTitle">Question</div>
+        <button id="mClose" class="btn ghost">Close</button>
+      </div>
+      <div class="modalBody">
+        <div class="badgeRow">
+          <span class="badge" id="mSkill">Skill</span>
+          <span class="badge" id="mDiff">Difficulty</span>
+        </div>
+
+        <div class="passage" id="mPassage"></div>
+        <div class="question" id="mQuestion"></div>
+
+        <div class="choices" id="mChoices"></div>
+
+        <div id="mFeedback" class="feedback hidden"></div>
+
+        <div class="modalFooter">
+          <button id="mSubmit" class="btn">Submit</button>
+          <button id="mNext" class="btn hidden">Continue</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Shop Modal -->
+  <div id="shop" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modalCard">
+      <div class="modalHeader">
+        <div class="modalTitle">Shop</div>
+        <button id="sClose" class="btn ghost">Close</button>
+      </div>
+      <div class="modalBody">
+        <div class="shopGrid">
+          <div class="shopItem">
+            <div class="shopName">⛏️ Shovel Upgrade</div>
+            <div class="shopDesc">Dig cheaper + higher chance to find question nodes.</div>
+            <div class="shopMeta">Cost: <span id="shovelCost">25</span> gold</div>
+            <button id="buyShovel" class="btn">Buy</button>
+          </div>
+
+          <div class="shopItem">
+            <div class="shopName">🧨 Dynamite</div>
+            <div class="shopDesc">Clears a 3×3 area (great for deep hunts).</div>
+            <div class="shopMeta">Cost: 15 gold</div>
+            <button id="buyDynamite" class="btn">Buy</button>
+          </div>
+
+          <div class="shopItem">
+            <div class="shopName">🗺️ Scanner Ping</div>
+            <div class="shopDesc">Reveals direction of nearest question node.</div>
+            <div class="shopMeta">Cost: 10 gold</div>
+            <button id="buyPing" class="btn">Buy</button>
+          </div>
+        </div>
+
+        <div class="shopNote">
+          Tip: More upgrades → more question nodes → faster CAT growth.
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Help Modal -->
+  <div id="help" class="modal hidden" role="dialog" aria-modal="true">
+    <div class="modalCard">
+      <div class="modalHeader">
+        <div class="modalTitle">Controls</div>
+        <button id="hClose" class="btn ghost">Close</button>
+      </div>
+      <div class="modalBody">
+        <ul class="bullets">
+          <li><b>Move:</b> Arrow keys or WASD</li>
+          <li><b>Dig:</b> Click an adjacent tile</li>
+          <li><b>Shop:</b> Press E</li>
+          <li><b>Dynamite:</b> Press D (if you have it)</li>
+          <li><b>Reset:</b> Top-right button</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+
+  <script src="questions.js"></script>
+  <script src="engine.js"></script>
+</body>
+</html>
