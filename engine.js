@@ -72,9 +72,9 @@
     py: 2,
 
     // economy
-    gold: 10,
+    gold: 30,
     shovelLevel: 1,
-    dynamite: 0,
+    dynamite: 2,
 
     // CAT stats
     catLevel: 2.0,         // 1.0..5.0
